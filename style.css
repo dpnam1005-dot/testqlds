@@ -37,6 +37,7 @@ body { background-color: var(--bg-color); color: var(--text-main); padding: 20px
     font-weight: 800;
     letter-spacing: -0.4px;
     margin: 0;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 .nav-tabs {
     display: flex;
@@ -197,24 +198,26 @@ tbody tr:hover { background-color: #F8F3ED; cursor: pointer; }
 
 /* Modal Option 2: Cập Nhật Doanh Số & Sản Phẩm */
 .update-sales-modal {
-    width: 580px;
-    max-width: 95%;
+    width: 550px;
+    max-width: 90%;
+    max-height: 85vh;
     background: #FFFFFF;
     border-radius: 18px;
-    padding: 28px;
+    padding: 24px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
     border: 1px solid #EFE8DF;
+    overflow-y: auto;
 }
 .update-sales-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding-bottom: 16px;
-    margin-bottom: 20px;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
     border-bottom: 1px solid #EFE8DF;
 }
 .update-sales-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: #00B87C;
     margin: 0;
@@ -223,7 +226,7 @@ tbody tr:hover { background-color: #F8F3ED; cursor: pointer; }
     gap: 8px;
 }
 .update-sales-subtitle {
-    font-size: 13.5px;
+    font-size: 13px;
     color: #6B7280;
     margin-top: 4px;
     font-weight: 600;
@@ -234,8 +237,8 @@ tbody tr:hover { background-color: #F8F3ED; cursor: pointer; }
     color: #FFFFFF;
     border: none;
     border-radius: 10px;
-    padding: 12px 24px;
-    font-size: 15px;
+    padding: 11px 22px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -249,8 +252,8 @@ tbody tr:hover { background-color: #F8F3ED; cursor: pointer; }
     color: #4B5563;
     border: none;
     border-radius: 10px;
-    padding: 12px 24px;
-    font-size: 15px;
+    padding: 11px 22px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -261,24 +264,26 @@ tbody tr:hover { background-color: #F8F3ED; cursor: pointer; }
 }
 
 .customer-form-modal {
-    width: 640px;
-    max-width: 95%;
+    width: 580px;
+    max-width: 90%;
+    max-height: 85vh;
     background: #FFFFFF;
     border-radius: 18px;
-    padding: 28px;
+    padding: 24px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
     border: 1px solid #EFE8DF;
+    overflow-y: auto;
 }
 .modal-header-custom {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 16px;
-    margin-bottom: 20px;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
     border-bottom: 1px solid #EFE8DF;
 }
 .modal-title-custom {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: #1B362B;
     margin: 0;
@@ -298,21 +303,21 @@ tbody tr:hover { background-color: #F8F3ED; cursor: pointer; }
     color: #1F2937;
 }
 .form-group-custom {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 }
 .form-group-custom label {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #2C2825;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 .form-control-custom {
     width: 100%;
-    padding: 12px 14px;
+    padding: 10px 12px;
     border: 1.5px solid #EFE8DF;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 13.5px;
     background: #FAF7F2;
     color: #2C2825;
     line-height: 1.5;
@@ -333,11 +338,12 @@ tbody tr:hover { background-color: #F8F3ED; cursor: pointer; }
     color: #FFFFFF;
     border: none;
     border-radius: 10px;
-    padding: 14px;
-    font-size: 15px;
+    padding: 12px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
+    margin-top: 6px;
 }
 .btn-submit-custom:hover {
     background-color: #12251D;
