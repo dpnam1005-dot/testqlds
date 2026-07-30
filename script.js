@@ -18,7 +18,7 @@ window.onerror = function (message, source, lineno, colno, error) {
         alert("Lỗi hệ thống (JS Error):\n" + message + "\n\nTại: " + (source ? source.split('/').pop() : 'unknown') + " (Dòng " + lineno + ")");
         const tableBody = document.getElementById('tableBody');
         if (tableBody) {
-            tableBody.innerHTML = `<tr><td colspan="9" class="text-center" style="color: #ef4444; padding: 30px; line-height: 1.6;">
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #ef4444; padding: 30px; line-height: 1.6;">
                 <b>Lỗi hệ thống (JavaScript Error):</b> ${message}<br>
                 <small style="color: var(--text-muted);">Tại: ${source ? source.split('/').pop() : 'unknown'}:${lineno}:${colno}</small>
             </td></tr>`;
@@ -42,7 +42,7 @@ try {
     document.addEventListener("DOMContentLoaded", () => {
         const tableBody = document.getElementById('tableBody');
         if (tableBody) {
-            tableBody.innerHTML = `<tr><td colspan="9" class="text-center" style="color: #ef4444; padding: 30px; line-height: 1.6;">
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #ef4444; padding: 30px; line-height: 1.6;">
                 <b>Lỗi khởi tạo ứng dụng:</b> ${e.message}<br>
                 <span style="color: var(--text-muted); font-size: 13px;">Vui lòng thử đổi DNS hoặc bật VPN, rồi tải lại trang (F5).</span>
             </td></tr>`;
@@ -70,12 +70,12 @@ const btnLogout = document.getElementById('btnLogout');
 
 // Xử lý gửi form Đăng nhập bằng Supabase Authentication
 if (authForm) {
-    authForm.addEventListener('submit', async function(e) {
+    authForm.addEventListener('submit', async function (e) {
         e.preventDefault();
         const id = authId.value.trim();
         const password = authPassword.value;
         const btnSubmit = document.getElementById('btnAuthSubmit');
-        
+
         btnSubmit.innerText = 'Đang đăng nhập...';
         btnSubmit.disabled = true;
         authErrorMsg.style.display = 'none';
@@ -84,17 +84,17 @@ if (authForm) {
             if (!supabaseClient) {
                 throw new Error("Không có kết nối đến cơ sở dữ liệu Supabase.");
             }
-            
+
             // Tự động map ID thành định dạng Email cho Supabase Auth (ví dụ: hieuhanh -> hieuhanh@daisylam.id.vn)
             const email = id.includes('@') ? id : `${id}@daisylam.id.vn`;
-            
+
             const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: email,
                 password: password
             });
 
             if (error) throw error;
-            
+
             // Khi đăng nhập thành công, onAuthStateChange sẽ tự động cập nhật UI
         } catch (err) {
             console.error("Lỗi đăng nhập:", err);
@@ -108,7 +108,7 @@ if (authForm) {
 
 // Xử lý nút Đăng xuất bằng Supabase Auth
 if (btnLogout) {
-    btnLogout.addEventListener('click', async function() {
+    btnLogout.addEventListener('click', async function () {
         if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?")) {
             try {
                 if (supabaseClient) {
@@ -132,7 +132,7 @@ function initAuthListener() {
                 if (authContainer) authContainer.style.display = 'none';
                 if (mainContainer) mainContainer.style.display = 'block';
                 if (btnLogout) btnLogout.style.display = 'block';
-                
+
                 // Tải dữ liệu khách hàng
                 fetchCustomers();
             } else {
@@ -141,7 +141,7 @@ function initAuthListener() {
                 if (authContainer) authContainer.style.display = 'flex';
                 if (mainContainer) mainContainer.style.display = 'none';
                 if (btnLogout) btnLogout.style.display = 'none';
-                
+
                 // Reset biểu mẫu đăng nhập
                 if (authForm) authForm.reset();
                 const btnSubmit = document.getElementById('btnAuthSubmit');
@@ -174,6 +174,8 @@ function mapFromSupabase(row) {
         taxId: row.tax_id || '',
         companyName: row.company_name || '',
         classification: row.classification || '',
+        category: row.product_name || '',
+        productDesc: row.product_description || '',
         contactName: row.contact_name || '',
         phone: row.phone || '',
         sales: Number(row.sales) || 0,
@@ -199,6 +201,8 @@ function mapToSupabase(c) {
         tax_id: taxVal || null,
         company_name: c.companyName?.trim() || '',
         classification: c.classification || '',
+        product_name: c.category?.trim() || null,
+        product_description: c.productDesc?.trim() || null,
         contact_name: c.contactName?.trim() || '',
         phone: formattedPhone,
         sales: salesVal && !isNaN(Number(salesVal)) ? Number(salesVal) : null,
@@ -213,16 +217,16 @@ async function fetchCustomers() {
     const tableBody = document.getElementById('tableBody');
     try {
         tableBody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: var(--primary-color); padding: 30px;">Đang tải dữ liệu từ máy chủ Supabase...</td></tr>`;
-        
+
         if (!supabaseClient) {
             throw new Error("Kết nối Supabase chưa được thiết lập. Hãy kiểm tra lỗi khởi tạo ở trên.");
         }
-        
+
         const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Quá thời gian 10 giây. Hãy kiểm tra lại kết nối mạng!")), 10000));
         const fetchPromise = supabaseClient.from('Quan ly ban hang').select('*').order('sales', { ascending: false });
-        
+
         const { data, error } = await Promise.race([fetchPromise, timeout]);
-        
+
         if (error) {
             console.error("Lỗi từ Supabase:", error);
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #ef4444; padding: 30px; line-height: 1.6;">
@@ -230,11 +234,11 @@ async function fetchCustomers() {
             </td></tr>`;
             return;
         }
-        
+
         customers = (data || []).map(mapFromSupabase);
         renderTable();
         updateCategoryDatalist(); // Cập nhật danh sách thể loại
-        
+
         // Khởi tạo custom autocomplete cho tất cả các input
         setTimeout(() => {
             initCustomAutocomplete('category', 'categoryDatalist');
@@ -244,7 +248,7 @@ async function fetchCustomers() {
             initCustomAutocomplete('salesCategorySelect', 'salesCategoryDatalist');
             initCustomAutocomplete('salesProductDescInput', 'salesProductDescDatalist');
         }, 100);
-    } catch(e) {
+    } catch (e) {
         console.error("Lỗi hệ thống:", e);
         tableBody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #ef4444; padding: 30px; line-height: 1.6;">
             <b>Lỗi kết nối mạng:</b> ${e.message}
@@ -260,7 +264,7 @@ const filterClassification = document.getElementById('filterClassification');
 
 // Thêm sự kiện tìm kiếm
 if (searchInput) {
-    searchInput.addEventListener('input', function() {
+    searchInput.addEventListener('input', function () {
         currentPage = 1; // Reset về trang 1 khi tìm kiếm
         renderTable();
     });
@@ -268,7 +272,7 @@ if (searchInput) {
 
 // Thêm sự kiện filter phân loại
 if (filterClassification) {
-    filterClassification.addEventListener('change', function() {
+    filterClassification.addEventListener('change', function () {
         currentPage = 1; // Reset về trang 1 khi filter
         renderTable();
     });
@@ -308,10 +312,10 @@ let customerToDelete = null;
 
 function formatInputWithCommas(e) {
     let isNegative = this.value.startsWith('-');
-    let rawValue = this.value.replace(/\D/g, ''); 
+    let rawValue = this.value.replace(/\D/g, '');
     let formatted = rawValue ? parseInt(rawValue, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
     if (isNegative && formatted) this.value = '-' + formatted;
-    else if (isNegative && !formatted) this.value = '-'; 
+    else if (isNegative && !formatted) this.value = '-';
     else this.value = formatted;
 
     if (this.id === 'addSales') {
@@ -355,7 +359,7 @@ function showHistoryModal(customerId) {
     } else {
         // Sắp xếp lịch sử theo thời gian mới nhất lên đầu
         const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-        
+
         const ul = document.createElement('div');
         ul.style.position = 'relative';
         ul.style.paddingLeft = '24px';
@@ -373,7 +377,7 @@ function showHistoryModal(customerId) {
 
             const itemDiv = document.createElement('div');
             itemDiv.style.position = 'relative';
-            
+
             // Dot
             const dot = document.createElement('div');
             dot.style.position = 'absolute';
@@ -414,7 +418,7 @@ function showHistoryModal(customerId) {
             detailsBox.style.borderRadius = '6px';
             detailsBox.style.padding = '8px 12px';
             detailsBox.style.marginTop = '6px';
-            
+
             let detailsHtml = `<ul style="margin: 0; padding-left: 15px; list-style-type: disc; color: #475569; font-size: 13px;">`;
             detailsHtml += `<li>Thực hiện bởi: <strong>${user}</strong></li>`;
             if (item.amount !== undefined && item.amount !== null && item.amount !== 0) {
@@ -423,18 +427,18 @@ function showHistoryModal(customerId) {
             }
             const categoryText = item.category ? `<strong style="color: var(--primary-color);">${item.category}</strong>` : '<span style="color: #94a3b8;">-</span>';
             detailsHtml += `<li>Tên sản phẩm: ${categoryText}</li>`;
-            
+
             const productDescText = item.productDesc ? `<span style="color: #64748b;">${item.productDesc}</span>` : '<span style="color: #94a3b8;">-</span>';
             detailsHtml += `<li>Mô tả: ${productDescText}</li>`;
             detailsHtml += `</ul>`;
-            
+
             detailsBox.innerHTML = detailsHtml;
             content.appendChild(detailsBox);
 
             itemDiv.appendChild(content);
             ul.appendChild(itemDiv);
         });
-        
+
         timelineContainer.appendChild(ul);
     }
 
@@ -518,7 +522,7 @@ function toggleEditMode(editing) {
     const titleTextEl = document.getElementById('formModalTitleText');
     const editActionsEl = document.getElementById('editActions');
     const addSalesContainerEl = document.getElementById('addSalesContainer');
-    
+
     if (editing) {
         if (titleTextEl && titleTextEl.innerText === "Thêm Khách Hàng Mới") titleTextEl.innerText = "Chỉnh Sửa Khách Hàng";
         if (btnSubmit) btnSubmit.style.display = 'none';
@@ -571,7 +575,7 @@ function renderTable() {
     if (currentPage > totalPages) currentPage = totalPages;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
-    
+
     tableBodyElement.innerHTML = '';
     if (paginatedItems.length === 0) {
         tableBodyElement.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #94a3b8; padding: 30px;">Không có dữ liệu.</td></tr>`;
@@ -600,7 +604,7 @@ function checkSoftDuplicates(data) {
     let warnings = [];
     customers.forEach(c => {
         if (String(c.customerId || '').toLowerCase() !== String(data.customerId || '').toLowerCase()) {
-            if (data.taxId && c.taxId && String(c.taxId) === String(data.taxId)) warnings.push(`- <strong>Mã số thuế</strong> trùng với khách hàng <span style="color: var(--primary-color)">${c.customerId}</span>`);
+            if (data.taxId && c.taxId && String(c.taxId).toLowerCase() === String(data.taxId).toLowerCase()) warnings.push(`- <strong>Mã số thuế</strong> trùng với khách hàng <span style="color: var(--primary-color)">${c.customerId}</span>`);
             if (data.companyName && c.companyName && String(c.companyName).toLowerCase() === String(data.companyName).toLowerCase()) warnings.push(`- <strong>Tên công ty</strong> trùng với khách hàng <span style="color: var(--primary-color)">${c.customerId}</span>`);
             if (data.phone && c.phone && String(c.phone) === String(data.phone)) warnings.push(`- <strong>Số điện thoại</strong> trùng với khách hàng <span style="color: var(--primary-color)">${c.customerId}</span>`);
         }
@@ -609,13 +613,13 @@ function checkSoftDuplicates(data) {
 }
 
 async function proceedWithSave(data, isUpdating) {
-    data.lastUpdated = new Date().toISOString(); 
+    data.lastUpdated = new Date().toISOString();
     if (btnSubmit) { btnSubmit.innerText = 'Đang lưu...'; btnSubmit.disabled = true; }
 
     const exists = customers.find(c => String(c.customerId || '').trim().toLowerCase() === String(data.customerId || '').trim().toLowerCase());
     if (exists && !isUpdating) {
         if (btnSubmit) { btnSubmit.innerText = 'Lưu Khách Hàng'; btnSubmit.disabled = false; }
-        
+
         notificationTitle.innerText = "⚠️ Cảnh Báo Trùng Mã Khách Hàng";
         notificationTitle.style.color = "#d97706";
         notificationMessage.innerHTML = `Mã khách hàng <strong style="color: #ef4444; font-size: 16px;">"${data.customerId}"</strong> đã tồn tại trên hệ thống!<br><br><span style="color: #64748b; font-size: 13px;">Vui lòng kiểm tra lại danh sách hoặc nhập một Mã KH khác.</span>`;
@@ -628,7 +632,7 @@ async function proceedWithSave(data, isUpdating) {
         return;
     } else {
         if (!isUpdating) {
-            data.history = [{ date: data.lastUpdated, amount: data.sales, note: 'Tạo mới', updated_by: currentUserEmail ? currentUserEmail.split('@')[0] : 'hệ thống' }];
+            data.history = [{ date: data.lastUpdated, amount: data.sales, note: 'Tạo mới', category: data.category || '', productDesc: data.productDesc || '', updated_by: currentUserEmail ? currentUserEmail.split('@')[0] : 'hệ thống' }];
             const payload = mapToSupabase(data);
             const { error } = await supabaseClient.from('Quan ly ban hang').insert([payload]);
             if (error) alert("Lỗi khi thêm mới dữ liệu: " + error.message);
@@ -639,20 +643,20 @@ async function proceedWithSave(data, isUpdating) {
         }
     }
 
-    await fetchCustomers(); 
+    await fetchCustomers();
     updateCategoryDatalist(); // Cập nhật danh sách thể loại sau khi lưu
     closeCustomerFormModal();
     if (btnSubmit) { btnSubmit.innerText = 'Lưu Khách Hàng'; btnSubmit.disabled = false; }
 }
 
 if (form) {
-    form.addEventListener('submit', function(e) { 
-        e.preventDefault(); 
-        proceedWithSave(getFormData(), false); 
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        proceedWithSave(getFormData(), false);
     });
 }
 
-document.getElementById('btnCloseNotification')?.addEventListener('click', function() { notificationModal.style.display = 'none'; });
+document.getElementById('btnCloseNotification')?.addEventListener('click', function () { notificationModal.style.display = 'none'; });
 document.getElementById('btnCloseHistoryModal')?.addEventListener('click', closeAllModals);
 document.getElementById('btnCloseHistoryBtn')?.addEventListener('click', () => {
     document.getElementById('historyModal').style.display = 'none';
@@ -674,23 +678,23 @@ document.getElementById('btnExportAnalysisPDF')?.addEventListener('click', expor
 // Export PDF cho modal Phân tích Sản phẩm
 document.getElementById('btnExportProductAnalysisPDF')?.addEventListener('click', exportProductAnalysisToPDF);
 
-document.getElementById('btnConfirmDelete')?.addEventListener('click', async function() { 
-    if (customerToDelete) { 
+document.getElementById('btnConfirmDelete')?.addEventListener('click', async function () {
+    if (customerToDelete) {
         document.getElementById('btnConfirmDelete').innerText = 'Đang xóa...';
         document.getElementById('btnConfirmDelete').disabled = true;
         const { error } = await supabaseClient.from('Quan ly ban hang').delete().eq('customer_id', customerToDelete);
         document.getElementById('btnConfirmDelete').innerText = 'Xóa';
         document.getElementById('btnConfirmDelete').disabled = false;
-        
+
         if (error) alert("Không thể xóa dòng dữ liệu: " + error.message);
         else { await fetchCustomers(); }
-    } 
-    deleteModal.style.display = 'none'; 
+    }
+    deleteModal.style.display = 'none';
 });
 
 document.getElementById('btnAddNewCustomer')?.addEventListener('click', () => {
-    if (idInput) { 
-        idInput.style.borderColor = 'var(--border-color)'; 
+    if (idInput) {
+        idInput.style.borderColor = 'var(--border-color)';
         const errorEl = document.getElementById('customerIdError');
         if (errorEl) errorEl.style.display = 'none';
     }
@@ -699,22 +703,22 @@ document.getElementById('btnAddNewCustomer')?.addEventListener('click', () => {
 
 // Thêm sự kiện kiểm tra trùng mã khách hàng khi người dùng nhập
 if (idInput) {
-    idInput.addEventListener('input', function() {
+    idInput.addEventListener('input', function () {
         const errorEl = document.getElementById('customerIdError');
         if (!errorEl) return;
-        
+
         const inputValue = this.value.trim().toLowerCase();
         if (inputValue === '') {
             errorEl.style.display = 'none';
             this.style.borderColor = 'var(--border-color)';
             return;
         }
-        
+
         // Kiểm tra xem mã KH có trùng không
-        const isDuplicate = customers.some(c => 
+        const isDuplicate = customers.some(c =>
             String(c.customerId || '').trim().toLowerCase() === inputValue
         );
-        
+
         if (isDuplicate) {
             errorEl.style.display = 'block';
             this.style.borderColor = '#ef4444';
@@ -725,8 +729,8 @@ if (idInput) {
     });
 }
 
-document.getElementById('btnCancelDelete')?.addEventListener('click', function() { if (deleteModal) deleteModal.style.display = 'none'; });
-document.getElementById('btnCancelEdit')?.addEventListener('click', function() {
+document.getElementById('btnCancelDelete')?.addEventListener('click', function () { if (deleteModal) deleteModal.style.display = 'none'; });
+document.getElementById('btnCancelEdit')?.addEventListener('click', function () {
     closeCustomerFormModal();
 });
 
@@ -844,7 +848,7 @@ document.getElementById('btnDeleteCustomer')?.addEventListener('click', () => {
 });
 
 // Submit Form Option 1: Lưu Thông Tin Khách Hàng (Cập nhật Hồ sơ)
-document.getElementById('editCustomerInfoForm')?.addEventListener('submit', async function(e) {
+document.getElementById('editCustomerInfoForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
     const customer = customers.find(c => String(c.customerId).toLowerCase() === String(currentActionCustomerId).toLowerCase());
     if (!customer) return;
@@ -884,7 +888,7 @@ document.getElementById('editCustomerInfoForm')?.addEventListener('submit', asyn
 });
 
 // Submit Form Option 2: Lưu Doanh Số & Sản Phẩm
-document.getElementById('updateSalesForm')?.addEventListener('submit', async function(e) {
+document.getElementById('updateSalesForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
     const customer = customers.find(c => String(c.customerId).toLowerCase() === String(currentActionCustomerId).toLowerCase());
     if (!customer) return;
@@ -937,7 +941,7 @@ document.getElementById('updateSalesForm')?.addEventListener('submit', async fun
     } else {
         let titleColor = addedSales > 0 ? '#10b981' : '#ef4444';
         let actionText = addedSales > 0 ? `Tăng thêm ${formatCurrency(addedSales)}` : `Giảm đi ${formatCurrency(Math.abs(addedSales))}`;
-        
+
         await fetchCustomers();
         updateCategoryDatalist(); // Cập nhật danh sách thể loại
         closeUpdateSalesModal();
@@ -1005,19 +1009,19 @@ document.getElementById('btnOptViewHistory')?.addEventListener('click', () => {
     }
 });
 
-document.getElementById('btnConfirmModal')?.addEventListener('click', async function() {
+document.getElementById('btnConfirmModal')?.addEventListener('click', async function () {
     if (!pendingCustomerData) return;
     const index = customers.findIndex(c => String(c.customerId).toLowerCase() === String(pendingCustomerData.customerId).toLowerCase());
-    if (index !== -1) { 
+    if (index !== -1) {
         pendingCustomerData.history = customers[index].history || [];
         pendingCustomerData.lastUpdated = new Date().toISOString();
-        
+
         const btn = document.getElementById('btnConfirmModal');
         if (btn) { btn.innerText = 'Đang ghi đè...'; btn.disabled = true; }
-        
+
         const payload = mapToSupabase(pendingCustomerData);
         const { error } = await supabaseClient.from('Quan ly ban hang').update(payload).eq('customer_id', pendingCustomerData.customerId);
-        
+
         if (btn) { btn.innerText = 'Có, Cập nhật'; btn.disabled = false; }
         if (error) alert("Gặp lỗi khi ghi đè dữ liệu: " + error.message);
         else await fetchCustomers();
@@ -1039,7 +1043,7 @@ function getFilteredAndSortedData() {
     return filtered;
 }
 
-document.getElementById('btnExportExcel').addEventListener('click', function() {
+document.getElementById('btnExportExcel').addEventListener('click', function () {
     const data = getFilteredAndSortedData(); if (data.length === 0) return;
     const exportData = data.map((c, index) => ({
         "STT": index + 1, "Mã KH": c.customerId || "", "Phân loại": c.classification || "",
@@ -1050,7 +1054,7 @@ document.getElementById('btnExportExcel').addEventListener('click', function() {
     XLSX.utils.book_append_sheet(wb, ws, "Doanh_So_Khach_Hang"); XLSX.writeFile(wb, "Bang_Xep_Hang_Doanh_So.xlsx");
 });
 
-document.getElementById('btnExportPDF').addEventListener('click', function() {
+document.getElementById('btnExportPDF').addEventListener('click', function () {
     const data = getFilteredAndSortedData(); if (data.length === 0) return;
     const tableBodyData = [];
     tableBodyData.push([{ text: 'STT', style: 'tableHeader', alignment: 'center' }, { text: 'Mã KH', style: 'tableHeader' }, { text: 'MST', style: 'tableHeader' }, { text: 'Tên Công ty', style: 'tableHeader' }, { text: 'Người LH', style: 'tableHeader' }, { text: 'SĐT', style: 'tableHeader' }, { text: 'Doanh số (VNĐ)', style: 'tableHeader', alignment: 'right' }, { text: 'Ngày cập nhật', style: 'tableHeader' }, { text: 'Ghi chú', style: 'tableHeader' }]);
@@ -1065,7 +1069,7 @@ document.getElementById('btnExportPDF').addEventListener('click', function() {
     });
     const docDefinition = {
         pageOrientation: 'landscape', pageSize: 'A4',
-        content: [ { text: 'Bảng Xếp hạng Doanh số Khách hàng', style: 'header' }, { table: { headerRows: 1, widths: ['4%', '11%', '9%', '21%', '11%', '10%', '13%', '12%', '9%'], body: tableBodyData }, layout: { hLineWidth: function (i) { return 1; }, vLineWidth: function (i) { return 1; }, hLineColor: function (i) { return '#e2e8f0'; }, vLineColor: function (i) { return '#e2e8f0'; }, paddingLeft: function(i) { return 6; }, paddingRight: function(i) { return 6; }, paddingTop: function(i) { return 8; }, paddingBottom: function(i) { return 8; } } } ],
+        content: [{ text: 'Bảng Xếp hạng Doanh số Khách hàng', style: 'header' }, { table: { headerRows: 1, widths: ['4%', '11%', '9%', '21%', '11%', '10%', '13%', '12%', '9%'], body: tableBodyData }, layout: { hLineWidth: function (i) { return 1; }, vLineWidth: function (i) { return 1; }, hLineColor: function (i) { return '#e2e8f0'; }, vLineColor: function (i) { return '#e2e8f0'; }, paddingLeft: function (i) { return 6; }, paddingRight: function (i) { return 6; }, paddingTop: function (i) { return 8; }, paddingBottom: function (i) { return 8; } } }],
         styles: { header: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 15], color: '#2563eb' }, tableHeader: { bold: true, fontSize: 11, color: '#475569', fillColor: '#f8fafc' } }, defaultStyle: { fontSize: 10 }
     };
     pdfMake.createPdf(docDefinition).download('Bang_Xep_Hang_Doanh_So.pdf');
@@ -1084,9 +1088,9 @@ function populateMonthSelect() {
 }
 function showRevenueReport() {
     const selectedValue = reportMonthSelect.value; let year, monthIndex, monthLabel;
-    if (selectedValue) { const parts = selectedValue.split('-'); year = parseInt(parts[0], 10); monthIndex = parseInt(parts[1], 10) - 1; monthLabel = `${monthIndex + 1}/${year}`; } 
+    if (selectedValue) { const parts = selectedValue.split('-'); year = parseInt(parts[0], 10); monthIndex = parseInt(parts[1], 10) - 1; monthLabel = `${monthIndex + 1}/${year}`; }
     else { const now = new Date(); year = now.getFullYear(); monthIndex = now.getMonth(); monthLabel = `${monthIndex + 1}/${year}`; }
-    let start = new Date(year, monthIndex, 1); start.setHours(0,0,0,0); let end = new Date(year, monthIndex + 1, 0); end.setHours(23, 59, 59, 999);
+    let start = new Date(year, monthIndex, 1); start.setHours(0, 0, 0, 0); let end = new Date(year, monthIndex + 1, 0); end.setHours(23, 59, 59, 999);
     let totalRevenuePeriod = 0; let transactionsInPeriod = [];
     customers.forEach(c => {
         if (c.history && c.history.length > 0) {
@@ -1145,7 +1149,7 @@ function showAnalysisModal() {
     document.getElementById('analysisTitle').innerText = `Phân Tích Doanh Thu & Khách Hàng - Tháng ${monthLabel}`;
 
     let start = new Date(year, monthIndex, 1);
-    start.setHours(0,0,0,0);
+    start.setHours(0, 0, 0, 0);
     let end = new Date(year, monthIndex + 1, 0);
     end.setHours(23, 59, 59, 999);
 
@@ -1163,7 +1167,7 @@ function showAnalysisModal() {
 
     // Xác định khoảng thời gian tháng trước để so sánh tăng trưởng/sụt giảm
     let prevStart = new Date(year, monthIndex - 1, 1);
-    prevStart.setHours(0,0,0,0);
+    prevStart.setHours(0, 0, 0, 0);
     let prevEnd = new Date(year, monthIndex, 0);
     prevEnd.setHours(23, 59, 59, 999);
 
@@ -1191,12 +1195,12 @@ function showAnalysisModal() {
 
         if (customerHasTxInMonth) {
             totalActiveCust++;
-            
+
             // Xác định khách mới trong tháng (giao dịch đầu tiên nằm trong tháng được chọn)
             const dates = c.history.map(tx => new Date(tx.date).getTime());
             const minDate = new Date(Math.min(...dates));
             const isNewThisMonth = minDate >= start && minDate <= end;
-            
+
             if (isNewThisMonth) {
                 newCustCount++;
                 newCustRevenue += customerRevenueInMonth;
@@ -1255,7 +1259,7 @@ function showAnalysisModal() {
     // Tính toán tỷ lệ phần trăm khách mới/cũ
     const newCustRatio = totalActiveCust > 0 ? Math.round((newCustCount / totalActiveCust) * 100) : 0;
     const newCustRevenueRatio = totalRevenueMonth > 0 ? Math.round((newCustRevenue / totalRevenueMonth) * 100) : 0;
-    
+
     const returnCustRatio = totalActiveCust > 0 ? Math.round((returningCustCount / totalActiveCust) * 100) : 0;
     const returnCustRevenueRatio = totalRevenueMonth > 0 ? Math.round((returningCustRevenue / totalRevenueMonth) * 100) : 0;
 
@@ -1270,7 +1274,7 @@ function showAnalysisModal() {
     // Cập nhật các thẻ tỷ lệ mới/cũ
     document.getElementById('kpiNewCustRatio').innerHTML = `${newCustRatio}% <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">${newCustCount}/${totalActiveCust} KH</span>`;
     document.getElementById('kpiNewCustRevenueRatio').innerText = `Đóng góp: ${newCustRevenueRatio}% doanh số (${formatCurrency(newCustRevenue)})`;
-    
+
     document.getElementById('kpiReturnCustRatio').innerHTML = `${returnCustRatio}% <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">${returningCustCount}/${totalActiveCust} KH</span>`;
     document.getElementById('kpiReturnCustRevenueRatio').innerText = `Đóng góp: ${returnCustRevenueRatio}% doanh số (${formatCurrency(returningCustRevenue)})`;
 
@@ -1286,7 +1290,7 @@ function showAnalysisModal() {
 
     const monthlyRevenues = last12Months.map(m => {
         const mStart = new Date(m.year, m.month - 1, 1);
-        mStart.setHours(0,0,0,0);
+        mStart.setHours(0, 0, 0, 0);
         const mEnd = new Date(m.year, m.month, 0);
         mEnd.setHours(23, 59, 59, 999);
 
@@ -1307,7 +1311,7 @@ function showAnalysisModal() {
     // Populate table details
     const analysisTableBody = document.getElementById('analysisTableBody');
     analysisTableBody.innerHTML = '';
-    
+
     const activeCustomersList = Object.values(customerRevenueMap).sort((a, b) => b.amount - a.amount);
     if (activeCustomersList.length === 0) {
         analysisTableBody.innerHTML = `<tr><td colspan="2" class="text-center" style="color: var(--text-muted); padding: 15px;">Không có dữ liệu giao dịch trong tháng này.</td></tr>`;
@@ -1349,7 +1353,7 @@ function showProductAnalysisModal() {
     document.getElementById('productAnalysisTitle').innerText = `Phân Tích Sản Phẩm & Doanh Thu - Tháng ${monthLabel}`;
 
     let start = new Date(year, monthIndex, 1);
-    start.setHours(0,0,0,0);
+    start.setHours(0, 0, 0, 0);
     let end = new Date(year, monthIndex + 1, 0);
     end.setHours(23, 59, 59, 999);
 
@@ -1362,9 +1366,9 @@ function showProductAnalysisModal() {
         if (c.history && c.history.length > 0) {
             c.history.forEach(tx => {
                 const txDate = new Date(tx.date);
-                if (txDate >= start && txDate <= end && tx.amount > 0) {
+                if (txDate >= start && txDate <= end && tx.amount !== 0) {
                     const productName = tx.category || 'Không rõ';
-                    
+
                     if (!productStats[productName]) {
                         productStats[productName] = {
                             name: productName,
@@ -1373,7 +1377,7 @@ function showProductAnalysisModal() {
                             customers: new Set()
                         };
                     }
-                    
+
                     productStats[productName].count++;
                     productStats[productName].revenue += tx.amount;
                     productStats[productName].customers.add(c.customerId);
@@ -1399,19 +1403,19 @@ function showProductAnalysisModal() {
 
     // Sắp xếp theo số lượt mua
     const topByCount = [...productsArray].sort((a, b) => b.count - a.count).slice(0, 5);
-    
+
     // Sắp xếp theo doanh thu
     const topByRevenue = [...productsArray].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-    
+
     // Top 5 sản phẩm có nhiều khách hàng mua nhất
     const topByCustomers = [...productsArray].sort((a, b) => b.customerCount - a.customerCount).slice(0, 5);
 
     // Populate table
     const tableBody = document.getElementById('productAnalysisTableBody');
     tableBody.innerHTML = '';
-    
+
     const sortedProducts = [...productsArray].sort((a, b) => b.revenue - a.revenue);
-    
+
     sortedProducts.forEach(product => {
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #e2e8f0';
@@ -1484,7 +1488,7 @@ function createProductCharts(topByCount, topByRevenue, productsArray, topByCusto
             scales: {
                 x: {
                     ticks: {
-                        callback: function(value) {
+                        callback: function (value) {
                             if (value >= 1e6) return (value / 1e6) + ' Tr';
                             return value.toLocaleString('vi-VN');
                         }
@@ -1496,15 +1500,15 @@ function createProductCharts(topByCount, topByRevenue, productsArray, topByCusto
 
     // Chart 3: Phân bố sản phẩm theo doanh thu (Doughnut)
     const ctx3 = document.getElementById('chartProductDistribution').getContext('2d');
-    
+
     // Lấy top 5 sản phẩm và nhóm còn lại
     const top5Products = [...productsArray].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
     const othersRevenue = productsArray.slice(5).reduce((sum, p) => sum + p.revenue, 0);
-    
+
     const labels = top5Products.map(p => p.name);
     const data = top5Products.map(p => p.revenue);
     const colors = ['#3b82f6', '#f59e0b', '#ec4899', '#10b981', '#8b5cf6'];
-    
+
     if (othersRevenue > 0) {
         labels.push('Sản phẩm khác');
         data.push(othersRevenue);
@@ -1534,7 +1538,7 @@ function createProductCharts(topByCount, topByRevenue, productsArray, topByCusto
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const label = context.label || '';
                             const value = context.parsed || 0;
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -1642,7 +1646,7 @@ function createAnalysisCharts(classCounts, topCustomers, trendLabels, trendData)
             scales: {
                 x: {
                     ticks: {
-                        callback: function(value) {
+                        callback: function (value) {
                             if (value >= 1e6) return (value / 1e6) + ' Tr';
                             return value.toLocaleString('vi-VN');
                         }
@@ -1685,7 +1689,7 @@ function createAnalysisCharts(classCounts, topCustomers, trendLabels, trendData)
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return `Doanh thu: ${formatCurrency(context.raw)}`;
                         }
                     }
@@ -1695,7 +1699,7 @@ function createAnalysisCharts(classCounts, topCustomers, trendLabels, trendData)
                 y: {
                     grace: '20%',
                     ticks: {
-                        callback: function(value) {
+                        callback: function (value) {
                             if (value >= 1e6) return (value / 1e6).toFixed(1) + ' Tr';
                             return value.toLocaleString('vi-VN') + ' đ';
                         }
@@ -1713,37 +1717,37 @@ function createAnalysisCharts(classCounts, topCustomers, trendLabels, trendData)
         },
         plugins: [{
             id: 'customDataLabels',
-            afterDatasetsDraw: function(chart) {
+            afterDatasetsDraw: function (chart) {
                 const ctx = chart.ctx;
                 chart.data.datasets.forEach((dataset, datasetIndex) => {
                     const meta = chart.getDatasetMeta(datasetIndex);
                     meta.data.forEach((point, index) => {
                         const dataVal = dataset.data[index];
                         const label = dataVal === 0 ? '0 đ' : formatCurrency(dataVal);
-                        
+
                         ctx.font = 'bold 11px sans-serif';
                         const textWidth = ctx.measureText(label).width;
                         const textHeight = 12;
-                        
+
                         const x = point.x;
                         const y = point.y - 18;
-                        
+
                         ctx.fillStyle = '#fef08a';
                         ctx.strokeStyle = '#facc15';
                         ctx.lineWidth = 1;
                         ctx.beginPath();
                         if (ctx.roundRect) {
-                            ctx.roundRect(x - textWidth/2 - 4, y - textHeight - 2, textWidth + 8, textHeight + 6, 3);
+                            ctx.roundRect(x - textWidth / 2 - 4, y - textHeight - 2, textWidth + 8, textHeight + 6, 3);
                         } else {
-                            ctx.rect(x - textWidth/2 - 4, y - textHeight - 2, textWidth + 8, textHeight + 6);
+                            ctx.rect(x - textWidth / 2 - 4, y - textHeight - 2, textWidth + 8, textHeight + 6);
                         }
                         ctx.fill();
                         ctx.stroke();
-                        
+
                         ctx.fillStyle = '#854d0e';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText(label, x, y - textHeight/2 + 1);
+                        ctx.fillText(label, x, y - textHeight / 2 + 1);
                     });
                 });
             }
@@ -1759,19 +1763,19 @@ const btnConfirmExcelImport = document.getElementById('btnConfirmExcelImport');
 
 let pendingExcelData = null;
 
-btnImportExcel.addEventListener('click', function() { fileInputExcel.value = null; fileInputExcel.click(); });
+btnImportExcel.addEventListener('click', function () { fileInputExcel.value = null; fileInputExcel.click(); });
 
-fileInputExcel.addEventListener('change', function(e) {
+fileInputExcel.addEventListener('change', function (e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = function (event) {
         try {
             const data = new Uint8Array(event.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
+            const workbook = XLSX.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
-            pendingExcelData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: "" }); 
-            
+            pendingExcelData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: "" });
+
             // Hiển thị modal chọn tháng
             populateExcelImportMonths();
             excelImportModal.style.display = 'flex';
@@ -1798,16 +1802,16 @@ function populateExcelImportMonths() {
 }
 
 if (btnCancelExcelImport) {
-    btnCancelExcelImport.addEventListener('click', function() {
+    btnCancelExcelImport.addEventListener('click', function () {
         excelImportModal.style.display = 'none';
         pendingExcelData = null;
     });
 }
 
 if (btnConfirmExcelImport) {
-    btnConfirmExcelImport.addEventListener('click', async function() {
+    btnConfirmExcelImport.addEventListener('click', async function () {
         if (!pendingExcelData) return;
-        
+
         const selectedValue = excelImportMonth.value;
         const parts = selectedValue.split('-');
         const selectedYear = parseInt(parts[0], 10);
@@ -1831,7 +1835,7 @@ if (btnConfirmExcelImport) {
                 for (let k in row) if (row.hasOwnProperty(k)) normRow[k.trim().toLowerCase()] = row[k];
                 const custId = String(normRow["mã kh"] || normRow["mã khách hàng"] || normRow["customerid"] || normRow["mã"] || "").trim();
                 if (!custId) return;
-                
+
                 let salesVal = normRow["doanh số kh (vnđ)"] || normRow["doanh số (vnđ)"] || normRow["doanh số"] || normRow["sales"] || 0;
                 if (typeof salesVal === 'string') salesVal = Number(salesVal.replace(/[,.]/g, '')) || 0;
 
@@ -1852,7 +1856,7 @@ if (btnConfirmExcelImport) {
                     // Cập nhật khách hàng cũ: dịch chuyển các bản ghi Excel cũ được ghi trong tháng này về tháng được chọn
                     const currentMonth = new Date().getMonth();
                     const currentYear = new Date().getFullYear();
-                    
+
                     newCustomer.history = (customers[existingIndex].history || []).map(tx => {
                         if (tx.note && tx.note.includes("Excel")) {
                             const txDate = new Date(tx.date);
@@ -1912,22 +1916,22 @@ initAuthListener();
 function initCustomAutocomplete(inputId, datalistId) {
     const input = document.getElementById(inputId);
     if (!input) return;
-    
+
     // Tạo wrapper và dropdown
     const wrapper = document.createElement('div');
     wrapper.className = 'custom-autocomplete-wrapper';
     input.parentNode.insertBefore(wrapper, input);
     wrapper.appendChild(input);
-    
+
     const dropdown = document.createElement('div');
     dropdown.className = 'custom-autocomplete-dropdown';
     wrapper.appendChild(dropdown);
-    
+
     let currentFocus = -1;
-    
+
     // Xóa list attribute để tắt datalist mặc định
     input.removeAttribute('list');
-    
+
     // Hàm lấy options từ datalist
     function getOptions() {
         const datalist = document.getElementById(datalistId);
@@ -1935,12 +1939,12 @@ function initCustomAutocomplete(inputId, datalistId) {
         const options = Array.from(datalist.querySelectorAll('option'));
         return options.map(opt => opt.value).filter(val => val);
     }
-    
+
     // Hàm hiển thị dropdown
     function showDropdown(items) {
         dropdown.innerHTML = '';
         currentFocus = -1;
-        
+
         if (items.length === 0) {
             const emptyDiv = document.createElement('div');
             emptyDiv.className = 'custom-autocomplete-empty';
@@ -1949,52 +1953,52 @@ function initCustomAutocomplete(inputId, datalistId) {
             dropdown.classList.add('show');
             return;
         }
-        
+
         items.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'custom-autocomplete-item';
             div.textContent = item;
             div.setAttribute('data-index', index);
-            
+
             div.addEventListener('click', () => {
                 input.value = item;
                 dropdown.classList.remove('show');
                 input.focus();
             });
-            
+
             dropdown.appendChild(div);
         });
-        
+
         dropdown.classList.add('show');
     }
-    
+
     // Hàm filter options
     function filterOptions(searchTerm) {
         const options = getOptions();
         if (!searchTerm) return options;
-        
-        return options.filter(opt => 
+
+        return options.filter(opt =>
             opt.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }
-    
+
     // Sự kiện input
-    input.addEventListener('input', function() {
+    input.addEventListener('input', function () {
         const filtered = filterOptions(this.value);
         showDropdown(filtered);
     });
-    
+
     // Sự kiện focus
-    input.addEventListener('focus', function() {
+    input.addEventListener('focus', function () {
         const filtered = filterOptions(this.value);
         showDropdown(filtered);
     });
-    
+
     // Sự kiện keyboard navigation
-    input.addEventListener('keydown', function(e) {
+    input.addEventListener('keydown', function (e) {
         const items = dropdown.querySelectorAll('.custom-autocomplete-item');
         if (items.length === 0) return;
-        
+
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             currentFocus++;
@@ -2014,7 +2018,7 @@ function initCustomAutocomplete(inputId, datalistId) {
             dropdown.classList.remove('show');
         }
     });
-    
+
     function setActive(items) {
         items.forEach(item => item.classList.remove('selected'));
         if (currentFocus >= 0 && currentFocus < items.length) {
@@ -2022,9 +2026,9 @@ function initCustomAutocomplete(inputId, datalistId) {
             items[currentFocus].scrollIntoView({ block: 'nearest' });
         }
     }
-    
+
     // Đóng dropdown khi click bên ngoài
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (!wrapper.contains(e.target)) {
             dropdown.classList.remove('show');
         }
@@ -2035,7 +2039,7 @@ function initCustomAutocomplete(inputId, datalistId) {
 function updateCategoryDatalist() {
     const categories = new Set(['Máy in', 'Mực in', 'Linh kiện', 'Dịch vụ / Sửa chữa', 'Khác']);
     const productDescs = new Set();
-    
+
     // Thu thập tất cả thể loại và mô tả sản phẩm từ customers và lịch sử
     customers.forEach(c => {
         if (c.category && c.category.trim()) {
@@ -2055,7 +2059,7 @@ function updateCategoryDatalist() {
             });
         }
     });
-    
+
     // Cập nhật datalist cho Tên sản phẩm - form thêm mới
     const datalist1 = document.getElementById('categoryDatalist');
     if (datalist1) {
@@ -2066,7 +2070,7 @@ function updateCategoryDatalist() {
             datalist1.appendChild(option);
         });
     }
-    
+
     // Cập nhật datalist cho Tên sản phẩm - form chỉnh sửa
     const datalist2 = document.getElementById('editCategoryDatalist');
     if (datalist2) {
@@ -2077,7 +2081,7 @@ function updateCategoryDatalist() {
             datalist2.appendChild(option);
         });
     }
-    
+
     // Cập nhật datalist cho Tên sản phẩm - form cập nhật doanh số
     const datalist3 = document.getElementById('salesCategoryDatalist');
     if (datalist3) {
@@ -2088,7 +2092,7 @@ function updateCategoryDatalist() {
             datalist3.appendChild(option);
         });
     }
-    
+
     // Cập nhật datalist cho Mô tả sản phẩm - form thêm mới
     const productDatalist1 = document.getElementById('productDescDatalist');
     if (productDatalist1) {
@@ -2099,7 +2103,7 @@ function updateCategoryDatalist() {
             productDatalist1.appendChild(option);
         });
     }
-    
+
     // Cập nhật datalist cho Mô tả sản phẩm - form chỉnh sửa
     const productDatalist2 = document.getElementById('editProductDescDatalist');
     if (productDatalist2) {
@@ -2110,7 +2114,7 @@ function updateCategoryDatalist() {
             productDatalist2.appendChild(option);
         });
     }
-    
+
     // Cập nhật datalist cho Mô tả sản phẩm - form cập nhật doanh số
     const productDatalist3 = document.getElementById('salesProductDescDatalist');
     if (productDatalist3) {
@@ -2127,7 +2131,7 @@ function updateCategoryDatalist() {
 // Hàm xuất PDF cho modal Phân tích Khách hàng
 async function exportAnalysisToPDF() {
     const title = document.getElementById('analysisTitle')?.innerText || 'Phân Tích Doanh Thu & Khách Hàng';
-    
+
     // Lấy dữ liệu KPI
     const kpiRevenueAllTime = document.getElementById('kpiRevenueAllTime')?.innerText || '0 đ';
     const kpiRevenue = document.getElementById('kpiRevenue')?.innerText || '0 đ';
@@ -2136,16 +2140,16 @@ async function exportAnalysisToPDF() {
     const kpiNewCustomers = document.getElementById('kpiNewCustomers')?.innerText || '0';
     const kpiNewCustRatio = document.getElementById('kpiNewCustRatio')?.innerText || '0%';
     const kpiReturnCustRatio = document.getElementById('kpiReturnCustRatio')?.innerText || '0%';
-    
+
     // Chuyển đổi canvas thành hình ảnh
     const chartClassification = document.getElementById('chartClassification');
     const chartTopCustomers = document.getElementById('chartTopCustomers');
     const chartRevenueTrend = document.getElementById('chartRevenueTrend');
-    
+
     const imgClassification = chartClassification ? chartClassification.toDataURL('image/png') : null;
     const imgTopCustomers = chartTopCustomers ? chartTopCustomers.toDataURL('image/png') : null;
     const imgRevenueTrend = chartRevenueTrend ? chartRevenueTrend.toDataURL('image/png') : null;
-    
+
     // Lấy dữ liệu bảng
     const tableBody = document.getElementById('analysisTableBody');
     const tableData = [];
@@ -2162,10 +2166,10 @@ async function exportAnalysisToPDF() {
             }
         });
     }
-    
+
     const content = [
         { text: title, style: 'header', margin: [0, 0, 0, 20] },
-        
+
         // KPI Section - Grid 3x2
         {
             table: {
@@ -2186,11 +2190,11 @@ async function exportAnalysisToPDF() {
             layout: 'noBorders',
             margin: [0, 0, 0, 20]
         },
-        
+
         // Charts Section
         { text: 'Biểu Đồ Phân Tích', style: 'subheader', margin: [0, 20, 0, 10] }
     ];
-    
+
     // Thêm biểu đồ nếu có
     if (imgClassification && imgTopCustomers) {
         content.push({
@@ -2202,12 +2206,12 @@ async function exportAnalysisToPDF() {
             margin: [0, 0, 0, 15]
         });
     }
-    
+
     if (imgRevenueTrend) {
         content.push({ text: 'Xu Hướng Tăng Trưởng Doanh Thu', style: 'chartTitle', margin: [0, 10, 0, 5] });
         content.push({ image: imgRevenueTrend, width: 500, alignment: 'center', margin: [0, 0, 0, 20] });
     }
-    
+
     // Table
     content.push({ text: 'Chi Tiết Khách Hàng Phát Sinh Doanh Số Trong Tháng', style: 'subheader', margin: [0, 20, 0, 10], pageBreak: 'before' });
     content.push({
@@ -2238,7 +2242,7 @@ async function exportAnalysisToPDF() {
             paddingBottom: () => 6
         }
     });
-    
+
     const docDefinition = {
         pageOrientation: 'portrait',
         pageSize: 'A4',
@@ -2253,30 +2257,30 @@ async function exportAnalysisToPDF() {
         },
         defaultStyle: { fontSize: 10 }
     };
-    
+
     pdfMake.createPdf(docDefinition).download('Phan_Tich_Khach_Hang.pdf');
 }
 
 // Hàm xuất PDF cho modal Phân tích Sản phẩm
 async function exportProductAnalysisToPDF() {
     const title = document.getElementById('productAnalysisTitle')?.innerText || 'Phân Tích Sản Phẩm & Doanh Thu';
-    
+
     // Lấy dữ liệu KPI
     const kpiTotalProducts = document.getElementById('kpiTotalProducts')?.innerText || '0';
     const kpiTotalPurchases = document.getElementById('kpiTotalPurchases')?.innerText || '0';
     const kpiProductRevenue = document.getElementById('kpiProductRevenue')?.innerText || '0 đ';
-    
+
     // Chuyển đổi canvas thành hình ảnh
     const chartTopProducts = document.getElementById('chartTopProducts');
     const chartTopRevenueProducts = document.getElementById('chartTopRevenueProducts');
     const chartProductDistribution = document.getElementById('chartProductDistribution');
     const chartTopProductsByCustomers = document.getElementById('chartTopProductsByCustomers');
-    
+
     const imgTopProducts = chartTopProducts ? chartTopProducts.toDataURL('image/png') : null;
     const imgTopRevenueProducts = chartTopRevenueProducts ? chartTopRevenueProducts.toDataURL('image/png') : null;
     const imgProductDistribution = chartProductDistribution ? chartProductDistribution.toDataURL('image/png') : null;
     const imgTopProductsByCustomers = chartTopProductsByCustomers ? chartTopProductsByCustomers.toDataURL('image/png') : null;
-    
+
     // Lấy dữ liệu bảng
     const tableBody = document.getElementById('productAnalysisTableBody');
     const tableData = [];
@@ -2294,10 +2298,10 @@ async function exportProductAnalysisToPDF() {
             }
         });
     }
-    
+
     const content = [
         { text: title, style: 'header', margin: [0, 0, 0, 20] },
-        
+
         // KPI Section
         {
             columns: [
@@ -2308,11 +2312,11 @@ async function exportProductAnalysisToPDF() {
             columnGap: 10,
             margin: [0, 0, 0, 20]
         },
-        
+
         // Charts Section
         { text: 'Biểu Đồ Phân Tích Sản Phẩm', style: 'subheader', margin: [0, 20, 0, 10] }
     ];
-    
+
     // Row 1: Top sản phẩm theo lượt mua và doanh thu
     if (imgTopProducts && imgTopRevenueProducts) {
         content.push({ text: 'Top 5 Sản Phẩm', style: 'chartTitle', margin: [0, 10, 0, 5] });
@@ -2325,7 +2329,7 @@ async function exportProductAnalysisToPDF() {
             margin: [0, 0, 0, 15]
         });
     }
-    
+
     // Row 2: Phân bố sản phẩm và top sản phẩm theo khách hàng
     if (imgProductDistribution && imgTopProductsByCustomers) {
         content.push({ text: 'Phân Tích Thêm', style: 'chartTitle', margin: [0, 10, 0, 5], pageBreak: 'before' });
@@ -2338,7 +2342,7 @@ async function exportProductAnalysisToPDF() {
             margin: [0, 0, 0, 20]
         });
     }
-    
+
     // Table
     content.push({ text: 'Chi Tiết Phân Tích Từng Sản Phẩm', style: 'subheader', margin: [0, 20, 0, 10] });
     content.push({
@@ -2371,7 +2375,7 @@ async function exportProductAnalysisToPDF() {
             paddingBottom: () => 6
         }
     });
-    
+
     const docDefinition = {
         pageOrientation: 'portrait',
         pageSize: 'A4',
@@ -2386,6 +2390,6 @@ async function exportProductAnalysisToPDF() {
         },
         defaultStyle: { fontSize: 10 }
     };
-    
+
     pdfMake.createPdf(docDefinition).download('Phan_Tich_San_Pham.pdf');
 }
