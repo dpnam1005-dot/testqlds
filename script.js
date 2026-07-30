@@ -28,8 +28,8 @@ window.onerror = function (message, source, lineno, colno, error) {
 };
 
 // ========== CONFIG ==========
-const SB_URL = 'https://ozpaslchfhcdechmrhlv.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96cGFzbGNoZmhjZGVjaG1yaGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTQxMDUsImV4cCI6MjA5ODY5MDEwNX0.Ekzyal8ona_CjoBkHV19iaDm20DXqCV4MJanSseZ1lo';
+const SB_URL = 'https://wayhdshfztpderqmvewd.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndheWhkc2hmenRwZGVycW12ZXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzE2MDEsImV4cCI6MjEwMDg0NzYwMX0.fLn7euo-MhdafTwSTP_gFrg8cTDGCzy6FT5GPBRVacI';
 
 let supabaseClient;
 try {
